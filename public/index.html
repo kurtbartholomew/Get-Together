@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PONG</title>
+  <script src="socket.io/socket.io.js"></script>
+</head>
+<body>
+  
+  <h1>HELLO</h1>
+  <script>
+    var socket = io.connect('http://localhost:8000');
+    socket.on('news', function(data) {
+      console.log(data);
+      socket.emit('my_other_event', { my:'data' });
+    });
+  </script>
+</body>
+</html>
