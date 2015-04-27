@@ -1,10 +1,12 @@
 var server = function(ioServer) {
   ioServer.on('connection', function(socket){
-    socket.emit('news', {hello: 'world'});
+    console.log("A player has connected");
 
-    ioServer.on('my_other_event', function(data){
-      console.log(data);
+    socket.on('ping', function(data){
+      console.log("Name: ", data.user);
+      socket.emit('pong', { greeting: 'HELLO!' });
     });
+    
   });
   
 };
