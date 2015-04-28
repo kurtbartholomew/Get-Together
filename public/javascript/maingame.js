@@ -201,16 +201,60 @@ var gameObj = function() {
       });
     },
     preload: function() {
-
+      // sets the up, down, right,and left arrows as useable
+      cursors = game.input.keyboard.createCursorKeys();
     },
     create: function() {
-
+      var textFormat = {font: "36px Comic Sans", fill: "#fff", align: "center"};
+      this.text = game.add.text(game.world.centerX, game.world.centerY, "Waiting for more players ("+ this.players + " / 4)", textFormat);
+      this.text.anchor.setTo(0.5, 0.5);
     },
     update: function() {
+      game.physics.arcade.collide(ball, paddles, function (ball, player){
+        ball.tint = player.tint;
+      });
+
+      if (this.countdown === false) {
+        // decide what to do 
+      } else {
+        // runs a conditional phased game iniation
+        this.initGame(this.countdown);
+      }
+
+      if (this.countdown !== false) {
+        this.text.text = "Ready to start...";
+      } else if (host || this.players === 4) {
+        this.text.text = "Waiting for sync..";
+      } else {
+        this.text.text =  "Waiting for more players ("+ this.players + " / 4)"
+      }
 
     },
+    // Fired when syncing begins, this will fire 3 times before the start of a game
+    // In its three phases, it places the ball, places the paddles, and removes messages about leaving
     initGame: function(phase) {
-
+      switch(phase) {
+        // check if breaks screw this up again
+        case 1:
+          ball.position.setTo(game.world.width / 2, game.world.height / 2 );
+          ball.tint = 0xffffff;
+          ball.player = -1;
+          ball.body.velocity.x = 0;
+          ball.body.velocity.y = 0;
+        case 2:
+          // set paddles to positions established in Loading State's create method
+          for (var num in paddles) {
+            paddles[num].position.setTo(paddles[num].op.x,paddles[num].op.y);
+          }
+          this.text.text = "GO!";
+        case 3:
+          socket.removeAllListeners('joined');
+          socket.removeAllListeners('timeOut');
+          socket.removeAllListeners('playerLeft');
+          this.text.destroy();
+          game.state.start("game", false, false, { player: this.ordinal });
+        break;
+      }
     }
   };
 
