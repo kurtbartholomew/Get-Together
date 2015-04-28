@@ -30,7 +30,7 @@ var server = function(ioServer) {
    * @return {[Boolean]} [True/false test of room existence]
    */
   var roomExists = function() {
-    return io.nsps["/"].adapter.rooms[room] != undefined;
+    return ioServer.nsps["/"].adapter.rooms[room] != undefined;
   };
 
   /**
@@ -40,7 +40,7 @@ var server = function(ioServer) {
    * @return {[Object]}          [a socket object]
    */
   var getSocket = function(socketId) {
-    return io.sockets.connected[socketId];
+    return ioServer.sockets.connected[socketId];
   };
 
   /**
@@ -49,7 +49,7 @@ var server = function(ioServer) {
    * @return {[String]}      [An object with socket id's]
    */
   var getRoom = function(room) {
-    return io.nsps["/"].adapter.rooms[room];
+    return ioServer.nsps["/"].adapter.rooms[room];
   };
 
   /**
@@ -184,10 +184,10 @@ var server = function(ioServer) {
           sendError("Sorry, you can't play with yourself", socket, room);
         }
       } else {
-        if( games[room] !== undefined) {
-          delete games[room];
+        if( runningGameIds[room] !== undefined) {
+          delete runningGameIds[room];
         }
-        console.log("Room "+room+" has been removed");
+        //console.log("Room "+room+" has been removed");
       }
     });
 

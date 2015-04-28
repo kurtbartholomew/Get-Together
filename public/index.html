@@ -8,13 +8,6 @@
 <body>
   
   <h1>HELLO</h1>
-  <script>
-    var socket = io();
-
-    socket.on('pong', function(data) {
-      console.log(data.greeting);
-    });
-    socket.emit('ping', { user:'Jimbo' });
-  </script>
+  <script type="text/javascript" src="javascript/maingame.js"></script>
 </body>
 </html>
