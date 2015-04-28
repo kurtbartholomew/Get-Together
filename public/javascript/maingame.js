@@ -93,45 +93,72 @@ var gameObj = function() {
       // sets center of ball to its midpoint
       ball.anchor.setTo(0.5,0.5);
 
+      // use phaser physics on ball
       game.physics.enable([ball], Phaser.Physics.ARCADE);
+      
+      // help ball start bouncing in a random direction
       var sign = game.rnd.integerInRange(0,1) == 0 ? 1 : -1;
       ball.body.velocity.x = game.rnd.integerInRange(100, 250) * sign;
       ball.body.velocity.y = game.rnd.integerInRange(100, 250) * sign;
+      
+      // set effect of physics interactions on ball
       ball.body.bounce.x = 1;
       ball.body.bounce.y = 1;
       ball.body.minBounceVelocity = 0;
+
+
       ball.player = -1;
 
+      // add paddles to sprite group and store their references in paddles
       paddles = [];
+      // Set player sprite on bottom
       paddles.push(sprites.create(game.world.centerX - halfPadSize, halfPadSize, 'ball'))
+      // Set player sprite on left
       paddles.push(sprites.create(halfPadSize, game.world.height / 2 - halfPadSize,'ball'));
+      // Set player sprite on top
       paddles.push(sprites.create(game.world.centerX - halfPadSize,game.world.height - halfPadSize,'ball'));
+      // Set player sprite on right
       paddles.push(sprites.create(game.world.width - halfPadSize,game.world.centerY - halfPadSize,'ball'));
 
+      // color the different players
       paddles[0].tint = 0xff0000;
       paddles[1].tint = 0x00ff00;
       paddles[2].tint = 0x0000ff;
       paddles[3].tint = 0xffff00;
 
+      // for each sprite
       for(var i in paddles) {
+        // set the original position
         paddles[i].op = paddles[i].position;
+        // give the player a number
         paddles[i].player = i;
+        // give the player a name
         paddles[i].name = "Player "+ (parseInt(i) + 1);
+        // if player number is even, expand the sprite's width
+        // otherwise expand it's height
         if(i % 2 == 0) {
           paddles[i].scale.setTo(padSize* 10, 10);
         } else {
           paddles[i].scale.setTo(10, padSize * 10);
         }
+        // place the sprite's anchor point in the center
         paddles[i].anchor.setTo(0.5,0.5);
+
+        //enable physics for each sprite
         games.physics.enable([ paddles[i] ], Phaser.Physics.ARCADE);
+        
+        // set physics interactions on sprite's rigid body
         paddles[i].body.bounce.x = 1;
         paddles[i].body.bounce.y = 1;
         paddles[i].body.minBounceVelocity = 0;
         paddles[i].body.immovable = true;
+
+        // constrain sprite's rigid body inside canvas
         paddles[i].body.collideWorldBounds = true;
       }
     },
     update: function() {
+      // when the ball collides, it change's to the color of that player
       game.physics.arcade.collide(ball, paddles, function(ball, player){
         ball.tint = player.tint;
       });
@@ -139,7 +166,52 @@ var gameObj = function() {
   };
 
   var SyncState = function() {
+    ordinal: false,
+    players: 0,
+    countdown: false,
+    init: function(data) {
+      // prevents game from pausing if you leave focus
+      game.state.disableVisibilityChange = true;
 
+      var identity = this;
+
+      identity.players = +data.playerCount;
+
+      // if player is hosting
+      if(data.hosting) {
+        // give client host settings and check if others are ready
+        identity.ordinal = 0;
+        host = true;
+        socket.emit('beginCheckingForTimeout', socket.id);
+      } else {
+        // set client's number and update when someone joins or leaves
+        identity.ordinal = data.playerCount - 1;
+        socket.on('joined', function (data) {
+          identity.players = +data.playerCount;
+        });
+        socket.on('playerLeft', function (data) {
+          self.players = +data.playerCount;
+        });
+      }
+      // attempts to respond to positively when server
+      // checks for connectivity
+      socket.on('timeOut', function(data, ack) {
+        identity.countdown = +data.times;
+        ack(socket.id);
+      });
+    },
+    preload: function() {
+
+    },
+    create: function() {
+
+    },
+    update: function() {
+
+    },
+    initGame: function(phase) {
+
+    }
   };
 
   var GameState = function() {
