@@ -22,7 +22,8 @@ $(function() {
 			}
 			if( data.playerCount === 4) {
 				$(".menu").hide();
-				//gameObject.sync({ hosting: true, playerCount: data.playerCount });
+				// moves user's game to the game's sync state
+				gameObject.sync({ hosting: true, playerCount: data.playerCount });
 			}
 		});
 
@@ -34,7 +35,8 @@ $(function() {
 			}
 			if( data.playerCount === 4) {
 				$(".menu").hide();
-				//gameObject.sync({ hosting: true, playerCount: data.playerCount });
+				// moves user's game to the game's sync state
+				gameObject.sync({ hosting: true, playerCount: data.playerCount });
 			}
 		});
 
@@ -60,7 +62,8 @@ $(function() {
 		$(".menu").hide();
 
 		socket.emit('join', $("#game-id-entry").val().trim(), function(data){
-			// gameObject.sync({ hosting: false, playerCount: +data.playerCount });
+			// moves user's game to the game's sync state
+			gameObject.sync({ hosting: false, playerCount: +data.playerCount });
 		});
 	});
 
