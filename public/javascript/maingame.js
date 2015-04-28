@@ -228,7 +228,6 @@ var gameObj = function() {
       } else {
         this.text.text =  "Waiting for more players ("+ this.players + " / 4)"
       }
-
     },
     // Fired when syncing begins, this will fire 3 times before the start of a game
     // In its three phases, it places the ball, places the paddles, and removes messages about leaving
@@ -259,7 +258,12 @@ var gameObj = function() {
   };
 
   var GameState = function() {
+    inactivePlayers = { 0: false, 1: false, 2: false, 3: false},
+    gameRunning: false,
+    init: function (data) {
 
+    },
+    
   };
 
   game.state.add("bootup", BootingState, true);
