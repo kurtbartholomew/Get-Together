@@ -453,8 +453,108 @@ var gameObj = function() {
           }
           break;
       }
-    }
+    },
+    endGame: function (player) {
+      this.gameRunning = false;
 
+      for(var i in paddles) {
+        paddles[i].scoreLabel.destroy();
+        paddles[i].destroy();
+      }
+
+      ball.destroy();
+      var textFormat = {font: "50px Arial", fill: "#ffffff", align: "center"};
+      var won = player.player === currentPlayer ? "You win!" : player.name + " wins!";
+      var text = game.add.text(game.world.centerX,game.world.centerY, won, textFormat);
+      text.anchor.setTo(0.5,0.5);
+
+      socket.removeAllListeners('playerLeft');
+      socket.removeAllListeners('clientUpdate');
+      socket.removeAllListeners('clientUpdateScores');
+      socket.removeAllListeners('clientUpdateBall');
+      socket.removeAllListeners('makeHost');
+      socket.removeAllListeners('disconnect');
+      socket.removeAllListeners('errorMsg');
+      socket.removeAllListeners('error');
+
+      // add correct dom elements back
+
+      setTimeout(function() {
+        socket.disconnect();
+      }, 5000);
+    },
+    socketTiming: 0,
+    socketDelay: 16,
+    getSocketDelay: function() {
+      return ping < this.socketDelay ? ping : this.socketDelay;
+    },
+    updateServer: function() {
+      this.socketTiming += game.time.elapsed;
+      if(this.socketTiming < this.getSocketDelay()) {
+        return;
+      }
+      this.socketTiming = 0;
+      var data = { socketId: socket.id };
+
+      if(master) {
+        data['ball'] = true;
+        data['ballX'] = parseFloat(ball.position.x).toFixed(2);
+        data['ballY'] = parseFloat(ball.position.y).toFixed(2);
+        data['ballSpeedX'] = parseFloat(ball.position.x).toFixed(2);
+        data['ballSpeedY'] = parseFloat(ball.position.y).toFixed(2);
+
+      } else {
+        data['ball'] = false;
+      }
+
+      data['player'] = +currentPlayer;
+      switch(data['player']) {
+        case 0:
+        case 2:
+          data['paddle'] = parseFloat(paddles[currentPlayer].position.x).toFixed(2);
+          break;
+        case 1:
+        case 3:
+          data['paddle'] = parseFloat(paddles[currentPlayer].position.y).toFixed(2);
+          break;
+      }
+
+      socket.emit('gameUpdate', data);
+    },
+    updateClient: function(data) {
+      if(!master && data.ball == true) {
+        ball.position.x = parseFloat(data.ballX);
+        ball.position.y = parseFloat(data.ballY);
+        ball.currentSpeedX = parseFloat(data.ballSpeedX);
+        ball.currentSpeedY = parseFloat(data.ballSpeedY);
+      }
+
+      if (currentPlayer !== data.player) {
+        switch(+data.player){
+          case 0:
+          case 2:
+            paddles[data.player].position.x = parseFloat(data.paddle);
+            break;
+          case 1:
+          case 3:
+            paddles[data.player].position.x = parseFloat(data.paddle);
+            break;
+        }
+      }
+    },
+    updateClientScores: function(data) {
+      if(!master) {
+        ball.tint = 0xffffff;
+        for(var i in data.scores) {
+          paddles[i].scoreLabel.text = +data.scores[i];
+        }
+      }
+    },
+    updateClientBall: function(data){
+      if(!master) {
+        ball.tint = data.ballTint;
+      }
+    },
   };
 
   game.state.add("bootup", BootingState, true);
