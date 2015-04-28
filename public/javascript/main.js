@@ -67,7 +67,7 @@ $(function() {
 		});
 	});
 
-	$(".finished-game-interface").click(function() {
+	$(".game-restart-button").click(function() {
 		socket.removeAllListeners('disconnect');
 		socket.disconnect();
 		location.href = location.href.replace(location.hash,"");

@@ -477,7 +477,10 @@ var gameObj = function() {
       socket.removeAllListeners('errorMsg');
       socket.removeAllListeners('error');
 
-      // add correct dom elements back
+      $(".menu").show();
+      $(".menu-host-interface").hide();
+      $(".menu-client-interface").hide();
+      $(".finished-game-interface").show();
 
       setTimeout(function() {
         socket.disconnect();
