@@ -311,7 +311,148 @@ var gameObj = function() {
       this.gameRunning = true;
     },
     update: function () {
+      if (this.gameRunning) {
+        for (var i in paddles) {
+          if (paddles[i].scoreLabel.text >= maxScore) {
+            this.endGame(paddles[i]);
+            return;
+          }
+        }
 
+        if (master) {
+          game.physics.arcade.collide(ball, paddles, function(ball,player) {
+            ball.tint = player.tint;
+            ball.player = player.player;
+
+            var data = {socketId: socket.id};
+            data['ballTint'] = ball.tint;
+            socket.emit('gameBallUpdate', data);
+          });
+          this.checkScore();
+        }
+        this.inputManagment();
+        // create tracking movements for inactive players
+        this.updateServer();
+      }
+    },
+    checkScore: function() {
+      if (master) {
+        var scored = false;
+        if (ball.body.y < -ball.body.height) {
+          scored = true;
+          if (ball.player === -1 || ball.player === 0) {
+            paddles[0].scoreLabel.text--;
+            scored = true;
+          } else {
+            paddles[ball.player].scoreLabel.text++;
+          }
+        } else if(ball.body.y > game.world.height + ball.body.height) {
+          scored = true;
+          if(ball.player === -1 || ball.player === 2) {
+            paddles[2].scoreLabel.text--;
+          } else {
+            paddles[ball.player].scoreLabel.text++;
+          }
+        } else if (ball.body.x < -ball.body.width) {
+          scored = true;
+          if (ball.player === -1 || ball.player === 1) {
+            paddles[1].scoreLabel.text--;
+          } else {
+            paddles[ball.player].scoreLabel.text++;
+          }
+        } else if (ball.body.x > game.world.width + ball.body.width) {
+          scored = true;
+          if (ball.player === -1 || ball.player === 3) {
+            paddles[3].scoreLabel.text--;
+          } else {
+            paddles[ball.player].scoreLabel.text++;
+          }
+        }
+
+        if(scored) {
+          var data = { socketId: socket.id };
+          data['scores'] = [];
+          for(var i in paddles) {
+            data['scores'].push(+paddles[i].scoreLabel.text));
+          }
+          socket.emit('gameScoreUpdate', data);
+
+          ball.body.position.setTo(game.world.centerX, game.world.centerY);
+          ball.player = -1;
+          ball.tint = 0xffffff;
+
+          var sign = game.rnd.integerInRange(0,1) == 0 ? 1 : -1;
+          ball.body.velocity.x = game.rnd.integerInRange(100, 250) * sign;
+          ball.body.velocity.y = game.rnd.integerInRange(100, 250) * sign;
+        }
+      }
+    },
+    inputManagment: function() {
+      var p = paddles[currentPlayer];
+
+      if (cursors.left.isDown || cursors.up.isDown) {
+        switch(currentPlayer) {
+          case 0:
+          case 2:
+            p.position.x -= moveFactor;
+            break;
+          case 1:
+          case 3:
+            p.position.y -= moveFactor;
+            break;
+        }
+      } else if (cursors.right.isDown || cursors.down.isDown) {
+        switch(currentPlayer) {
+          case 0:
+          case 2:
+            p.position.x += moveFactor;
+            break;
+          case 1:
+          case 3:
+            p.position.y += moveFactor;
+            break;
+        }
+      } else {
+        switch(currentPlayer) {
+          case 0:
+          case 2:
+            if (game.input.activePointer.x >= paddles[currentPlayer].position.x + moveFactor) {
+              p.position.x += moveFactor;
+            } else if (game.input.activePointer.x <= paddles[currentPlayer].position.x - moveFactor) {
+              p.position.x -= moveFactor
+            }
+            break;
+          case 1:
+          case 3:
+            if (game.input.activePointer.y >= paddles[currentPlayer].position.y + moveFactor) {
+              p.position.y += moveFactor;
+            } else if (game.input.activePointer.y <= paddles[currentPlayer].position.y - moveFactor) {
+              p.position.y -= moveFactor
+            }
+            break;
+        }
+      }
+
+      var pH2 = p.body.height / 2;
+      var pW2 = p.body.width / 2;
+      switch (currentPlayer) {
+        case 0:
+        case 2:
+          if (p.position.x < pW2) {
+            p.position.x = pW2;
+          } else if (p.position.x > game.world.width - pW2) {
+            p.position.x = game.world.width - pW2;
+          }
+          break;
+        case 1:
+        case 3:
+          if (p.position.y < pH2) {
+            p.position.y = pH2;
+          } else if (p.position.y > game.world.width - pH2) {
+            p.position.y = game.world.width - pH2;
+          }
+          break;
+      }
     }
 
   };
