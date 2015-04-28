@@ -1,6 +1,6 @@
 var express = require('express')
 var app = express();
-var path = require('path');
+// can use morgan to create error log file
 var logger = require('morgan');
 var compression = require('compression');
 
