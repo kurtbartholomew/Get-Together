@@ -1,4 +1,4 @@
-var express = require('express')
+var express = require('express');
 var app = express();
 // can use morgan to create error log file
 var logger = require('morgan');

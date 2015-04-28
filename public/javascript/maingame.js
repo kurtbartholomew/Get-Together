@@ -61,24 +61,24 @@ var gameObj = function() {
   var moveFactor = 5;
   var maxScore = 10;
 
-  var BootingState = function() {
-    var preload = function() {
+  var BootingState = {
+    preload : function() {
       // load a sprite to show to indicate loading
-    };
-    var create = function() {
+    },
+    create : function() {
       game.state.start('preload');
-    };
+    }
   };
 
-  var LoadingState = function() {
-    preload: function() {
+  var LoadingState = {
+    preload: function () {
       game.stage.disableVisibilityChange = true;
 
       // create a sprite for the loading 
       
-      game.load.image('ball', /* path to ball image */)
+      game.load.image('ball', 'assets/sprites/pixel.png');
     },
-    create: function() {
+    create: function () {
       // destroy loading sprite
       
       game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -86,7 +86,7 @@ var gameObj = function() {
       // create a group of sprites so they can be instantiated together
       sprites = game.add.group();
 
-      ball = sprites.create(game.world.centerX - halfBallSize, game.world.centerY - halfBallSize, 'ball')
+      ball = sprites.create(game.world.centerX - halfBallSize, game.world.centerY - halfBallSize, 'ball');
       ball.name = 'ball';
       // scales ball's X and Y to declared ballScaleSize
       ball.scale.setTo(ballSize, ballSize);
@@ -97,7 +97,7 @@ var gameObj = function() {
       game.physics.enable([ball], Phaser.Physics.ARCADE);
       
       // help ball start bouncing in a random direction
-      var sign = game.rnd.integerInRange(0,1) == 0 ? 1 : -1;
+      var sign = game.rnd.integerInRange(0,1) === 0 ? 1 : -1;
       ball.body.velocity.x = game.rnd.integerInRange(100, 250) * sign;
       ball.body.velocity.y = game.rnd.integerInRange(100, 250) * sign;
       
@@ -112,7 +112,7 @@ var gameObj = function() {
       // add paddles to sprite group and store their references in paddles
       paddles = [];
       // Set player sprite on bottom
-      paddles.push(sprites.create(game.world.centerX - halfPadSize, halfPadSize, 'ball'))
+      paddles.push(sprites.create(game.world.centerX - halfPadSize, halfPadSize, 'ball'));
       // Set player sprite on left
       paddles.push(sprites.create(halfPadSize, game.world.height / 2 - halfPadSize,'ball'));
       // Set player sprite on top
@@ -136,7 +136,7 @@ var gameObj = function() {
         paddles[i].name = "Player "+ (parseInt(i) + 1);
         // if player number is even, expand the sprite's width
         // otherwise expand it's height
-        if(i % 2 == 0) {
+        if(i % 2 === 0) {
           paddles[i].scale.setTo(padSize* 10, 10);
         } else {
           paddles[i].scale.setTo(10, padSize * 10);
@@ -165,7 +165,7 @@ var gameObj = function() {
     }
   };
 
-  var SyncState = function() {
+  var SyncState = {
     ordinal: false,
     players: 0,
     countdown: false,
@@ -226,7 +226,7 @@ var gameObj = function() {
       } else if (host || this.players === 4) {
         this.text.text = "Waiting for sync..";
       } else {
-        this.text.text =  "Waiting for more players ("+ this.players + " / 4)"
+        this.text.text =  "Waiting for more players ("+ this.players + " / 4)";
       }
     },
     // Fired when syncing begins, this will fire 3 times before the start of a game
@@ -240,12 +240,14 @@ var gameObj = function() {
           ball.player = -1;
           ball.body.velocity.x = 0;
           ball.body.velocity.y = 0;
+          break;
         case 2:
           // set paddles to positions established in Loading State's create method
           for (var num in paddles) {
             paddles[num].position.setTo(paddles[num].op.x,paddles[num].op.y);
           }
           this.text.text = "GO!";
+          break;
         case 3:
           socket.removeAllListeners('joined');
           socket.removeAllListeners('timeOut');
@@ -257,8 +259,8 @@ var gameObj = function() {
     }
   };
 
-  var GameState = function() {
-    inactivePlayers = { 0: false, 1: false, 2: false, 3: false},
+  var GameState = {
+    inactivePlayers : { 0: false, 1: false, 2: false, 3: false},
     gameRunning: false,
     init: function (data) {
       game.stage.disableVisibilityChange = true;
@@ -282,7 +284,7 @@ var gameObj = function() {
         master = true;
         ball.body.velocity.x = ball.currentSpeedX;
         ball.body.velocity.y = ball.currentSpeedY;
-      })
+      });
     },
     create: function () {
       if (!master) {
@@ -373,7 +375,7 @@ var gameObj = function() {
           var data = { socketId: socket.id };
           data['scores'] = [];
           for(var i in paddles) {
-            data['scores'].push(+paddles[i].scoreLabel.text));
+            data['scores'].push(+paddles[i].scoreLabel.text);
           }
           socket.emit('gameScoreUpdate', data);
 
@@ -381,7 +383,7 @@ var gameObj = function() {
           ball.player = -1;
           ball.tint = 0xffffff;
 
-          var sign = game.rnd.integerInRange(0,1) == 0 ? 1 : -1;
+          var sign = game.rnd.integerInRange(0,1) === 0 ? 1 : -1;
           ball.body.velocity.x = game.rnd.integerInRange(100, 250) * sign;
           ball.body.velocity.y = game.rnd.integerInRange(100, 250) * sign;
         }
@@ -419,7 +421,7 @@ var gameObj = function() {
             if (game.input.activePointer.x >= paddles[currentPlayer].position.x + moveFactor) {
               p.position.x += moveFactor;
             } else if (game.input.activePointer.x <= paddles[currentPlayer].position.x - moveFactor) {
-              p.position.x -= moveFactor
+              p.position.x -= moveFactor;
             }
             break;
           case 1:
@@ -427,7 +429,7 @@ var gameObj = function() {
             if (game.input.activePointer.y >= paddles[currentPlayer].position.y + moveFactor) {
               p.position.y += moveFactor;
             } else if (game.input.activePointer.y <= paddles[currentPlayer].position.y - moveFactor) {
-              p.position.y -= moveFactor
+              p.position.y -= moveFactor;
             }
             break;
         }
@@ -525,7 +527,7 @@ var gameObj = function() {
       socket.emit('gameUpdate', data);
     },
     updateClient: function(data) {
-      if(!master && data.ball == true) {
+      if(!master && data.ball === true) {
         ball.position.x = parseFloat(data.ballX);
         ball.position.y = parseFloat(data.ballY);
         ball.currentSpeedX = parseFloat(data.ballSpeedX);
@@ -560,7 +562,7 @@ var gameObj = function() {
     },
   };
 
-  game.state.add("bootup", BootingState, true);
+  game.state.add("boot", BootingState, true);
   game.state.add("preload", LoadingState);
   game.state.add("sync", SyncState);
   game.state.add("game", GameState, false);
@@ -571,7 +573,7 @@ var gameObj = function() {
 
   this.switchToSync = function(data) {
     game.state.start("sync", false, false, data);
-  }
+  };
 
   return this;
 };
@@ -582,4 +584,4 @@ gameObj.prototype.getSocket = function() {
 
 gameObj.prototype.sync = function(data) {
   this.switchToSync(data);
-}
+};

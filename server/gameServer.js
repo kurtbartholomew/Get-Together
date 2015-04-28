@@ -30,7 +30,7 @@ var server = function(ioServer) {
    * @return {[Boolean]} [True/false test of room existence]
    */
   var roomExists = function() {
-    return ioServer.nsps["/"].adapter.rooms[room] != undefined;
+    return ioServer.nsps["/"].adapter.rooms[room] !== undefined;
   };
 
   /**
@@ -74,7 +74,7 @@ var server = function(ioServer) {
     }
     socket.emit('errorMsg', { msg: msg });
     console.log("Error: ", msg);
-  }
+  };
 
   var startTimeOut = function(room, playerOrdinal, timeoutCounter) {
     playerOrdinal = playerOrdinal || 0;
@@ -95,7 +95,7 @@ var server = function(ioServer) {
         console.log("Error finding socket during timeout check: ",socketId);
       }
     }
-  }
+  };
 
 
   ioServer.on('connection', function(socket){
@@ -130,7 +130,7 @@ var server = function(ioServer) {
               ack({ playersCount: players.length});
               io.to(room).emit('joined', { playersCount: players.length });
             } else {
-              console.log("Error occurred: ",err)
+              console.log("Error occurred: ",err);
               sendError("Client: Error joining room", socket);
             }
           });
@@ -168,7 +168,7 @@ var server = function(ioServer) {
 
       var currentPlayers = socketsInRoom(room);
 
-      if (room != null && currentPlayers.length > 0) {
+      if (room !== null && currentPlayers.length > 0) {
         io.to(room).emit('playerLeft', { playerLeft: p, playersCount: currentPlayers.length});
         
         // if disconnecting player is host and there are players left...
