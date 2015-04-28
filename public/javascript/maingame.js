@@ -261,9 +261,59 @@ var gameObj = function() {
     inactivePlayers = { 0: false, 1: false, 2: false, 3: false},
     gameRunning: false,
     init: function (data) {
+      game.stage.disableVisibilityChange = true;
 
+      var identity = this;
+      currentPlayer = data.player;
+
+      socket.on('playerLeft', function (data) {
+        identity.inactivePlayers[+data.playerLeft] = true;
+      });
+      socket.on('clientUpdate', function(data) {
+        identity.updateClient(data);
+      });
+      socket.on('clientUpdateScores', function(data) {
+        identity.clientUpdateScores(data);
+      });
+      socket.on('clientUpdateBall', function(data) {
+        identity.clientUpdateBall(data);
+      });
+      socket.on('makeHost', function (data) {
+        master = true;
+        ball.body.velocity.x = ball.currentSpeedX;
+        ball.body.velocity.y = ball.currentSpeedY;
+      })
     },
-    
+    create: function () {
+      if (!master) {
+        ball.body.velocity.x = 0;
+        ball.body.velocity.y = 0;
+      } else {
+        var sign = game.rnd.integerInRange(0,1) == 0 ? 1 : -1;
+        ball.body.velocity.x = game.rnd.integerInRange(100, 250) * sign;
+        ball.body.velocity.y = game.rnd.integerInRange(100, 250) * sign;
+      }
+
+      var scoresPos = [
+        {w: game.world.centerX, h: game.world.centerY - 100},
+        {w: game.world.centerX - 100, h: game.world.centerY},
+        {w: game.world.centerX, h: game.world.centerY + 100},
+        {w: game.world.centerX + 100, h: game.world.centerY}
+      ];
+
+      for (var i in paddles) {
+        paddles[i].position.setTo(paddles[i].op.x,paddles[i].op.y);
+        var style = {font: "50px Comic Sans", fill: "#" + colors[i], align: "center"};
+        paddles[i].scoreLabel = game.add.text(scoresPos[i].w,scoresPos[i].h, "0", style);
+        paddles[i].scoreLabel.anchor.setTo(0.5, 0.5);
+      }
+
+      this.gameRunning = true;
+    },
+    update: function () {
+
+    }
+
   };
 
   game.state.add("bootup", BootingState, true);
