@@ -61,6 +61,36 @@ var gameObj = function() {
   var moveFactor = 5;
   var maxScore = 10;
 
+  function robotTakeover(inactivePlayers) {
+    if (inactivePlayers == undefined) {
+      inactivePlayers = {0:true, 1:true, 2:true, 3:true};
+    }
+
+    for (var i in paddles) {
+      if (!inactivePlayers[i]) {
+        continue;
+      }
+
+      var p = paddles[i];
+      var pH2 = p.body.height/2;
+      var pW2 = p.body.width/2;
+      switch (parseInt(i)) {
+        case 0:
+        case 2:
+          if (ball.body.x >= pW2 && ball.body.x <= game.world.width - pW2) {
+              p.position.x = ball.position.x;
+          }
+        break;
+        case 1:
+        case 3:
+          if (ball.body.y >= pH2 && ball.body.y <= game.world.height - pH2) {
+              p.position.y = ball.position.y;
+          }
+        break;
+      }
+    }
+  }
+
   var BootingState = {
     preload : function() {
       // load a sprite to show to indicate loading
@@ -162,6 +192,8 @@ var gameObj = function() {
       game.physics.arcade.collide(ball, paddles, function(ball, player){
         ball.tint = player.tint;
       });
+
+      robotTakeover();
     }
   };
 
@@ -215,7 +247,7 @@ var gameObj = function() {
       });
 
       if (this.countdown === false) {
-        // decide what to do 
+        robotTakeover(); 
       } else {
         // runs a conditional phased game initiation
         this.initGame(this.countdown);
@@ -333,7 +365,7 @@ var gameObj = function() {
           this.checkScore();
         }
         this.inputManagment();
-        // create tracking movements for inactive players
+        robotTakeover(this.inactivePlayers);
         this.updateServer();
       }
     },
