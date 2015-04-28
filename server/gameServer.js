@@ -29,7 +29,7 @@ var server = function(ioServer) {
    * Checks if a room exists in the root namespace
    * @return {[Boolean]} [True/false test of room existence]
    */
-  var roomExists = function() {
+  var roomExists = function(room) {
     return ioServer.nsps["/"].adapter.rooms[room] !== undefined;
   };
 
@@ -60,11 +60,28 @@ var server = function(ioServer) {
    * @return {[String]}      [An array of socket id's]
    */
   var socketsInRoom = function(room) {
-    var sockets = getRoom(room);
-    if (typeof sockets === 'object') {
-      return Object.keys(sockets);
-    } else {
-      return [];
+    if (ioServer === undefined) {
+        console.log("ioServer is undefined");
+    }
+
+    if (ioServer.nsps["/"] === undefined) {
+        console.log("Root namespace is undefined");
+    }
+
+    if (ioServer.nsps["/"].adapter === undefined) {
+        console.log("adapter is undefined");
+    }
+
+    if (ioServer.nsps["/"].adapter.rooms === undefined) {
+        console.log("rooms is undefined ");
+    }
+
+    var r = getRoom(room);
+    if (typeof r === 'object') {
+        return Object.keys(r);
+    }
+    else {
+        return [];
     }
   };
 
@@ -76,20 +93,24 @@ var server = function(ioServer) {
     console.log("Error: ", msg);
   };
 
-  var startTimeOut = function(room, playerOrdinal, timeoutCounter) {
-    playerOrdinal = playerOrdinal || 0;
-    timeoutCounter = timeoutCounter || 0;
+  var startTimeOut = function(room, playerCounter, times) {
+    playerCounter = playerCounter || 0;
+    times = times || 0;
 
-    var currentPlayers = socketsInRoom(room);
+    var players = socketsInRoom(room);
 
-    if (timeoutCounter > 3) {
+    if (times > 3) {
       return;
+    } else if (playerCounter >= maxPlayers) {
+      startTimeOut(room, 0, ++times);
     } else {
-      var socketId = currentPlayers[playerOrdinal];
-      var socketObj = io.sockets.connected[currentPlayers[playerOrdinal]];
-      if (socket !== undefined) {
-        socket.emit('timeOut', {times: times}, function(socketId){
-          startTimeOut(room, playerOrdinal++, timeoutCounter);
+      var socketId = players[playerCounter];
+      var socketObj = ioServer.sockets.connected[players[playerCounter]];
+      if (socketObj !== undefined) {
+        console.log('ticking... '+times+' '+ socketId);
+        socketObj.emit('timeOut', {times: times}, function(socketId){
+          console.log('ticking back... '+times+' '+ socketId);
+          startTimeOut(room, ++playerCounter, times);
         });
       } else {
         console.log("Error finding socket during timeout check: ",socketId);
@@ -108,8 +129,9 @@ var server = function(ioServer) {
           clientPlayers[socket.id] = 0;
           clients[socket.id] = room;
           hosts[socket.id] = true;
-          ack(room); // TODO: Figure out what the hell this is...
+          ack(room); 
           console.log('Host '+ socket.id + ' has connected');
+          console.log("Hosting in room ",room);
         } else {
           console.log("An error has occurred: ",err);
           // TODO: Add the ability to send error messages to host/client
@@ -128,23 +150,26 @@ var server = function(ioServer) {
               var players = socketsInRoom(room);
               clientPlayers[socket.id] = players.length -1;
               ack({ playersCount: players.length});
-              io.to(room).emit('joined', { playersCount: players.length });
+              console.log('client ' + socket.id + ' connected to room ' + room + ' (' + players.length + '/'+maxPlayers+')');
+              ioServer.to(room).emit('joined', { playersCount: players.length });
             } else {
               console.log("Error occurred: ",err);
               sendError("Client: Error joining room", socket);
             }
           });
         } else {
+          console.log(room, " is inaccessible");
           sendError("That room is inaccessible", socket);
         }
       } else {
+        console.log(room, " does not exist");
         sendError("That room does not exist", socket);
       } 
     });
 
 
 
-    socket.on('beginCheckingForTimeout', function(socketId) {
+    socket.on('startCounting', function(socketId) {
       var room = clients[socketId];
       var players = socketsInRoom(room);
 
@@ -169,14 +194,14 @@ var server = function(ioServer) {
       var currentPlayers = socketsInRoom(room);
 
       if (room !== null && currentPlayers.length > 0) {
-        io.to(room).emit('playerLeft', { playerLeft: p, playersCount: currentPlayers.length});
+        ioServer.to(room).emit('playerLeft', { playerLeft: p, playersCount: currentPlayers.length});
         
         // if disconnecting player is host and there are players left...
         if(hosts[socket.id] && currentPlayers.length > 1) {
           hosts[socket.id] = false; 
           delete hosts[socket.id];
 
-          var newSocketId = currentPlayers[Math.floor(Math.random() * players.length)];
+          var newSocketId = currentPlayers[Math.floor(Math.random() * currentPlayers.length)];
           hosts[newSocketId] = true;
 
           getSocket(newSocketId).emit('makeHost');
@@ -191,30 +216,26 @@ var server = function(ioServer) {
       }
     });
 
-
-    console.log("A player has connected");
-
     socket.on('ping', function(data){
-      console.log("Name: ", data.user);
-      socket.emit('pong', { greeting: 'HELLO!' });
+      socket.emit('pong');
     });
 
     socket.on('gameUpdate', function(data) {
       var room = clients[data.socketId];
       delete data.socketId;
-      io.to(room).emit('clientUpdate', data);
+      ioServer.to(room).emit('clientUpdate', data);
     });
 
     socket.on('gameScoreUpdate', function(data) {
       var room = clients[data.socketId];
       delete data.socketId;
-      io.to(room).emit('clientUpdateScores', data);
+      ioServer.to(room).emit('clientUpdateScores', data);
     });
 
     socket.on('gameBallUpdate', function(data) {
       var room = clients[data.socketId];
       delete data.socketId;
-      io.to(room).emit('clientUpdateBall', data);
+      ioServer.to(room).emit('clientUpdateBall', data);
     });
   });
 };

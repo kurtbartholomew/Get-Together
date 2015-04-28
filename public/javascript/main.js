@@ -12,31 +12,31 @@ $(function() {
     $(".main-menu-buttons").hide();
     $(".menu-host-interface").show();
 
-    var playerCount = $(".current-player-count");
+    var $playerCount = $(".current-player-count");
 
     socket.on('joined', function(data) {
-      data.playerCount = +data.playerCount;
+      data.playersCount = parseInt(data.playersCount);
 
-      if( playerCount.length > 0) {
-        playerCount.text(data.playerCount);
+      if( $playerCount.length > 0) {
+        $playerCount.text(data.playersCount);
       }
-      if( data.playerCount === 4) {
+      if( data.playersCount === 4) {
         $(".menu").hide();
         // moves user's game to the game's sync state
-        gameObject.sync({ hosting: true, playerCount: data.playerCount });
+        gameObject.sync({ hosting: true, playersCount: data.playersCount });
       }
     });
 
     socket.on('playerLeft', function(data) {
-      data.playerCount = +data.playerCount;
+      data.playersCount = parseInt(data.playersCount);
 
-      if( playerCount.length > 0) {
-        playerCount.text(data.playerCount);
+      if( $playerCount.length > 0) {
+        $playerCount.text(data.playersCount);
       }
-      if( data.playerCount === 4) {
+      if( data.playersCount === 4) {
         $(".menu").hide();
         // moves user's game to the game's sync state
-        gameObject.sync({ hosting: true, playerCount: data.playerCount });
+        gameObject.sync({ hosting: true, playersCount: data.playersCount });
       }
     });
 
@@ -58,12 +58,11 @@ $(function() {
     // highlight the game id in input
   });
 
-  $("join-game-session").on('click',function(){
+  $(".join-game-session").on('click',function(){
     $(".menu").hide();
-
     socket.emit('join', $("#game-id-entry").val().trim(), function(data){
       // moves user's game to the game's sync state
-      gameObject.sync({ hosting: false, playerCount: +data.playerCount });
+      gameObject.sync({ hosting: false, playersCount: parseInt(data.playersCount) });
     });
   });
 

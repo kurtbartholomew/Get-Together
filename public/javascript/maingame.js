@@ -38,10 +38,10 @@ var gameObj = function() {
   checkLatency();
 
   var gameDiv = "game";  
-  var gameWidth = +document.getElementById(gameDiv);
-  var gameHeight = +document.getElementById(gameDiv);
+  var gameWidth = parseInt(document.getElementById(gameDiv).offsetWidth);
+  var gameHeight = parseInt(document.getElementById(gameDiv).offsetHeight);
 
-  var Game = new Phaser(gameWidth, gameHeight, Phaser.AUTO, gameDiv, null, false, false);
+  var game = new Phaser.Game(gameWidth, gameHeight, Phaser.AUTO, gameDiv, null, false, false);
 
   var host = false;
   var paddles = [];
@@ -50,9 +50,9 @@ var gameObj = function() {
 
   var currentPlayer = -1;
   var master = false;
-  var cursorts;
+  var cursors;
 
-  var colors = []; // TODO: Fill this in with colors for paddles
+  var colors = ["ff0000", "00ff00", "0000ff", "ffff00"];
 
   var ballSize = 10;
   var halfBallSize = ballSize / 2;
@@ -145,7 +145,7 @@ var gameObj = function() {
         paddles[i].anchor.setTo(0.5,0.5);
 
         //enable physics for each sprite
-        games.physics.enable([ paddles[i] ], Phaser.Physics.ARCADE);
+        game.physics.enable([ paddles[i] ], Phaser.Physics.ARCADE);
         
         // set physics interactions on sprite's rigid body
         paddles[i].body.bounce.x = 1;
@@ -166,7 +166,7 @@ var gameObj = function() {
   };
 
   var SyncState = {
-    ordinal: false,
+    p: false,
     players: 0,
     countdown: false,
     init: function(data) {
@@ -175,28 +175,28 @@ var gameObj = function() {
 
       var identity = this;
 
-      identity.players = +data.playerCount;
+      identity.players = parseInt(data.playersCount);
 
       // if player is hosting
       if(data.hosting) {
         // give client host settings and check if others are ready
-        identity.ordinal = 0;
+        identity.p = 0;
         host = true;
-        socket.emit('beginCheckingForTimeout', socket.id);
+        socket.emit('startCounting', socket.id);
       } else {
         // set client's number and update when someone joins or leaves
-        identity.ordinal = data.playerCount - 1;
+        identity.p = data.playersCount - 1;
         socket.on('joined', function (data) {
-          identity.players = +data.playerCount;
+          identity.players = parseInt(data.playersCount);
         });
         socket.on('playerLeft', function (data) {
-          self.players = +data.playerCount;
+          identity.players = parseInt(data.playersCount);
         });
       }
       // attempts to respond to positively when server
       // checks for connectivity
       socket.on('timeOut', function(data, ack) {
-        identity.countdown = +data.times;
+        identity.countdown = parseInt(data.times);
         ack(socket.id);
       });
     },
@@ -205,7 +205,7 @@ var gameObj = function() {
       cursors = game.input.keyboard.createCursorKeys();
     },
     create: function() {
-      var textFormat = {font: "36px Comic Sans", fill: "#fff", align: "center"};
+      var textFormat = {font: "20px Comic Sans", fill: "#fff", align: "center"};
       this.text = game.add.text(game.world.centerX, game.world.centerY, "Waiting for more players ("+ this.players + " / 4)", textFormat);
       this.text.anchor.setTo(0.5, 0.5);
     },
@@ -217,7 +217,7 @@ var gameObj = function() {
       if (this.countdown === false) {
         // decide what to do 
       } else {
-        // runs a conditional phased game iniation
+        // runs a conditional phased game initiation
         this.initGame(this.countdown);
       }
 
@@ -253,7 +253,7 @@ var gameObj = function() {
           socket.removeAllListeners('timeOut');
           socket.removeAllListeners('playerLeft');
           this.text.destroy();
-          game.state.start("game", false, false, { player: this.ordinal });
+          game.state.start("game", false, false, { player: this.p });
         break;
       }
     }
@@ -269,7 +269,7 @@ var gameObj = function() {
       currentPlayer = data.player;
 
       socket.on('playerLeft', function (data) {
-        identity.inactivePlayers[+data.playerLeft] = true;
+        identity.inactivePlayers[parseInt(data.playerLeft)] = true;
       });
       socket.on('clientUpdate', function(data) {
         identity.updateClient(data);
@@ -375,7 +375,7 @@ var gameObj = function() {
           var data = { socketId: socket.id };
           data['scores'] = [];
           for(var i in paddles) {
-            data['scores'].push(+paddles[i].scoreLabel.text);
+            data['scores'].push(parseInt(paddles[i].scoreLabel.text));
           }
           socket.emit('gameScoreUpdate', data);
 
@@ -491,7 +491,7 @@ var gameObj = function() {
     socketTiming: 0,
     socketDelay: 16,
     getSocketDelay: function() {
-      return ping < this.socketDelay ? ping : this.socketDelay;
+      return latency < this.socketDelay ? latency : this.socketDelay;
     },
     updateServer: function() {
       this.socketTiming += game.time.elapsed;
@@ -512,7 +512,7 @@ var gameObj = function() {
         data['ball'] = false;
       }
 
-      data['player'] = +currentPlayer;
+      data['player'] = parseInt(currentPlayer);
       switch(data['player']) {
         case 0:
         case 2:
@@ -535,7 +535,7 @@ var gameObj = function() {
       }
 
       if (currentPlayer !== data.player) {
-        switch(+data.player){
+        switch(parseInt(data.player)){
           case 0:
           case 2:
             paddles[data.player].position.x = parseFloat(data.paddle);
@@ -551,7 +551,7 @@ var gameObj = function() {
       if(!master) {
         ball.tint = 0xffffff;
         for(var i in data.scores) {
-          paddles[i].scoreLabel.text = +data.scores[i];
+          paddles[i].scoreLabel.text = parseInt(data.scores[i]);
         }
       }
     },
