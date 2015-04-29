@@ -15,7 +15,7 @@ var gameObj = function() {
   });
 
   socket.on('errorMsg', function(data) {
-    window.alert("Error: ",data.msg);
+    window.alert("Error: ", data.msg);
     location.href = location.href.replace(location.hash,"");
   });
   

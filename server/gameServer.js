@@ -143,7 +143,7 @@ var server = function(ioServer) {
       var room = data;
       if(roomExists(room)) {
         var numOfPlayers = socketsInRoom(room).length;
-        //if( numOfPlayers < 1) { sendError("That room doesn't exist", socket); }
+        if( numOfPlayers < 1) { sendError("That room doesn't exist", socket); }
         if ( numOfPlayers > 0 && numOfPlayers <= maxPlayers){
           socket.join(room, function (err) {
             if (!err) {
