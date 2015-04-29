@@ -89,8 +89,8 @@ var server = function(ioServer) {
     if (room !== undefined) {
       socket = socket.to(room);
     }
-    socket.emit('errorMsg', { msg: msg });
-    console.log("Error: ", msg);
+    socket.emit('errorMsg', { msg: message });
+    console.log("Error: ", message);
   };
 
   var startTimeOut = function(room, playerCounter, times) {
@@ -134,7 +134,7 @@ var server = function(ioServer) {
           console.log("Hosting in room ",room);
         } else {
           console.log("An error has occurred: ",err);
-          // TODO: Add the ability to send error messages to host/client
+          sendError("Host: can't join room", socket);
         }
       });
     });
@@ -143,6 +143,7 @@ var server = function(ioServer) {
       var room = data;
       if(roomExists(room)) {
         var numOfPlayers = socketsInRoom(room).length;
+        //if( numOfPlayers < 1) { sendError("That room doesn't exist", socket); }
         if ( numOfPlayers > 0 && numOfPlayers <= maxPlayers){
           socket.join(room, function (err) {
             if (!err) {
@@ -173,7 +174,7 @@ var server = function(ioServer) {
       var room = clients[socketId];
       var players = socketsInRoom(room);
 
-      if (players.length == maxPlayers) {
+      if (players.length === maxPlayers) {
         setTimeout(function() {
           startTimeOut(room);
         }, timeOutDelay);
@@ -205,7 +206,7 @@ var server = function(ioServer) {
           hosts[newSocketId] = true;
 
           getSocket(newSocketId).emit('makeHost');
-        } else if ( currentPlayers.length == 1 ) {
+        } else if ( currentPlayers.length === 1 ) {
           sendError("Sorry, you can't play with yourself", socket, room);
         }
       } else {

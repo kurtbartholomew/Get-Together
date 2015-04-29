@@ -299,6 +299,7 @@ var gameObj = function() {
 
       var identity = this;
       currentPlayer = data.player;
+      master = data.player == 0;
 
       socket.on('playerLeft', function (data) {
         identity.inactivePlayers[parseInt(data.playerLeft)] = true;
@@ -354,7 +355,7 @@ var gameObj = function() {
         }
 
         if (master) {
-          game.physics.arcade.collide(ball, paddles, function(ball,player) {
+          game.physics.arcade.collide(ball, paddles, function (ball, player) {
             ball.tint = player.tint;
             ball.player = player.player;
 
