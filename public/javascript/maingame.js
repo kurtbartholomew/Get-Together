@@ -537,8 +537,8 @@ var gameObj = function() {
         data['ball'] = true;
         data['ballX'] = parseFloat(ball.position.x).toFixed(2);
         data['ballY'] = parseFloat(ball.position.y).toFixed(2);
-        data['ballSpeedX'] = parseFloat(ball.position.x).toFixed(2);
-        data['ballSpeedY'] = parseFloat(ball.position.y).toFixed(2);
+        data['ballSpeedX'] = parseFloat(ball.body.velocity.x).toFixed(2);
+        data['ballSpeedY'] = parseFloat(ball.body.velocity.y).toFixed(2);
 
       } else {
         data['ball'] = false;
@@ -574,12 +574,12 @@ var gameObj = function() {
             break;
           case 1:
           case 3:
-            paddles[data.player].position.x = parseFloat(data.paddle);
+            paddles[data.player].position.y = parseFloat(data.paddle);
             break;
         }
       }
     },
-    updateClientScores: function(data) {
+    clientUpdateScores: function(data) {
       if(!master) {
         ball.tint = 0xffffff;
         for(var i in data.scores) {
@@ -587,7 +587,7 @@ var gameObj = function() {
         }
       }
     },
-    updateClientBall: function(data){
+    clientUpdateBall: function(data){
       if(!master) {
         ball.tint = data.ballTint;
       }
