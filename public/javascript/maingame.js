@@ -319,14 +319,14 @@ var gameObj = function() {
       });
     },
     create: function () {
-      // if (!master) {
-      //   ball.body.velocity.x = 0;
-      //   ball.body.velocity.y = 0;
-      // } else {
+      if (!master) {
+        ball.body.velocity.x = 0;
+        ball.body.velocity.y = 0;
+      } else {
         var sign = game.rnd.integerInRange(0,1) === 0 ? 1 : -1;
         ball.body.velocity.x = game.rnd.integerInRange(100, 250) * sign;
         ball.body.velocity.y = game.rnd.integerInRange(100, 250) * sign;
-      // }
+      }
 
       var scoresPos = [
         {w: game.world.centerX, h: game.world.centerY - 100},
